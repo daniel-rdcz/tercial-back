@@ -1,0 +1,31 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main  # Cambia a la rama que quieras monitorear
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Clona el repositorio
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # 2. Configura SSH para conectarte a tu EC2
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.4
+      with:
+        ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+    # 3. Conéctate a la EC2 y despliega
+    - name: Deploy to EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ec2-user@3.80.75.50 << 'EOF'
+          cd tercial/tercial-back  # Cambia a la ruta de tu proyecto
+          git pull origin main    # Actualiza el código
+          docker-compose build    # Reconstruye los contenedores
+          docker-compose up -d    # Reinicia los servicios
+        EOF
